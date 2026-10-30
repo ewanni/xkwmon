@@ -114,7 +114,7 @@ This installs the package to `/opt/xkwmon`, the config to
 `/etc/xkwmon/config.ini`, a launcher to `/usr/local/bin/xkwmon`, the udev rule,
 and enables `xkwmon.service`.
 
-With `--user` the installer creates the `xkwmon` system/user group and the udev
+With `--user` the installer creates the `xkwmon` system user/group and the udev
 rule `99-xkw-panel.rules` gives that group access to the panel's `/dev/hidrawN`.
 Nothing else needs root: `/sys` hwmon files and RAPL `energy_uj` are world
 readable, and NVIDIA device nodes are `0666`.
