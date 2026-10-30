@@ -11,7 +11,7 @@ from typing import Sequence
 
 from . import __version__, api, config as config_module, protocol, sensors
 from .hidraw import HidrawDevice, HidrawError
-from .service import PanelService, setup_logging
+from .service import PanelService, rpm_value, setup_logging
 
 
 def _config(args: argparse.Namespace) -> config_module.Config:
@@ -126,7 +126,9 @@ def cmd_panel(args: argparse.Namespace) -> int:
         frames = 0
         for index in range(max(0, args.frames)):
             snapshot = reader.sample()
-            frame = protocol.build_data_frame(snapshot.as_frame_data())
+            data = snapshot.as_frame_data()
+            data["rpm"] = rpm_value(snapshot, args.rpm or cfg.rpm_mode)
+            frame = protocol.build_data_frame(data)
             device.write_report(frame)
             frames += 1
             if args.hex:
@@ -153,7 +155,9 @@ def cmd_raw(args: argparse.Namespace) -> int:
     reader = sensors.SensorReader()
     time.sleep(0.35)
     snapshot = reader.sample()
-    frame = protocol.build_data_frame(snapshot.as_frame_data())
+    data = snapshot.as_frame_data()
+    data["rpm"] = rpm_value(snapshot, args.rpm)
+    frame = protocol.build_data_frame(data)
     if args.hex:
         print(frame.hex(" "))
     else:
@@ -197,6 +201,8 @@ def build_parser() -> argparse.ArgumentParser:
     panel.add_argument("--frames", type=int, default=5, help="number of frames to send")
     panel.add_argument("--interval", type=float, default=0.5, help="delay between frames, s")
     panel.add_argument("--attempts", type=int, default=3, help="handshake attempts")
+    panel.add_argument("--rpm", choices=["clock", "fan"], default=None,
+                       help="override the RPM slot source for this test run")
     panel.add_argument("--hex", action="store_true", help="dump each frame")
     panel.add_argument("--force", action="store_true", help="send frames even without handshake")
     panel.set_defaults(func=cmd_panel)
@@ -211,6 +217,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     raw = subparsers.add_parser("raw", help="print the HID data frame as hex/table")
     raw.add_argument("--hex", action="store_true")
+    raw.add_argument("--rpm", choices=["clock", "fan"], default="clock",
+                     help="what to put in the RPM slot (default: clock)")
     raw.set_defaults(func=cmd_raw)
 
     return parser

@@ -16,6 +16,23 @@ from .hidraw import HidrawDevice, HidrawError
 LOGGER = logging.getLogger(__name__)
 
 
+def rpm_value(snapshot: "sensors.Snapshot", mode: str = "clock") -> float:
+    """Value for the panel's "RPM" field.
+
+    ``clock`` shows the CPU frequency (the patched Windows behaviour),
+    ``fan`` shows a pump/fan tachometer reading when the board exposes one.
+    GPU fan entries are percentages and are therefore ignored.
+    """
+    if mode != "fan":
+        return float(snapshot.cpu_clock)
+    fans = [fan for fan in snapshot.fans if "gpu" not in str(fan.get("name", "")).lower()]
+    for fan in fans:
+        name = str(fan.get("name", "")).lower()
+        if "cpu" in name or "pump" in name:
+            return float(fan.get("speed", 0) or 0)
+    return max((float(fan.get("speed", 0) or 0) for fan in fans), default=0.0)
+
+
 def setup_logging(config: Config) -> None:
     """Configure logging according to the config file."""
     level = getattr(logging, config.log_level.upper(), logging.INFO)
@@ -155,7 +172,11 @@ class PanelService:
                     self._connect()
                 if self._device is not None:
                     snapshot = self.current_snapshot()
-                    data = snapshot.as_frame_data() if snapshot else {}
+                    if snapshot is not None:
+                        data = snapshot.as_frame_data()
+                        data["rpm"] = rpm_value(snapshot, self.config.rpm_mode)
+                    else:
+                        data = {}
                     frame = protocol.build_data_frame(data)
                     try:
                         self._device.write_report(frame)

@@ -103,5 +103,51 @@ class SensorSmokeTests(unittest.TestCase):
         self.assertEqual(len(frame), 65)
 
 
+class RpmModeTests(unittest.TestCase):
+    def test_rpm_value_clock_and_fan(self) -> None:
+        from xkwmon.sensors import Snapshot
+        from xkwmon.service import rpm_value
+
+        snap = Snapshot(cpu_clock=5400.0, fans=[{"name": "GPU FAN", "speed": 75.0}])
+        self.assertEqual(rpm_value(snap, "clock"), 5400.0)
+        # GPU fan entries are percentages, not RPM -> ignored
+        self.assertEqual(rpm_value(snap, "fan"), 0.0)
+
+        snap = Snapshot(
+            cpu_clock=5400.0,
+            fans=[{"name": "GPU FAN", "speed": 75.0}, {"name": "AIO Pump", "speed": 2100.0}],
+        )
+        self.assertEqual(rpm_value(snap, "fan"), 2100.0)
+
+        snap = Snapshot(fans=[{"name": "SYSFAN1", "speed": 900.0}, {"name": "SYSFAN2", "speed": 1200.0}])
+        self.assertEqual(rpm_value(snap, "fan"), 1200.0)
+
+    def test_frame_carries_rpm_slot(self) -> None:
+        from xkwmon.protocol import build_data_frame
+
+        frame = build_data_frame({"rpm": 2100})
+        self.assertEqual(int.from_bytes(frame[25:27], "big"), 2100)
+
+    def test_config_rpm_mode(self) -> None:
+        import tempfile
+        import os as _os
+
+        from xkwmon import config as config_module
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = _os.path.join(tmp, "config.ini")
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("[config]\nRpmMode=fan\n")
+            self.assertEqual(config_module.load(path, create=False).rpm_mode, "fan")
+
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("[config]\nRpmMode=garbage\n")
+            self.assertEqual(config_module.load(path, create=False).rpm_mode, "clock")
+
+            with open(path, "w", encoding="utf-8") as handle:
+                handle.write("[config]\n")
+            self.assertEqual(config_module.load(path, create=False).rpm_mode, "clock")
+
+
 if __name__ == "__main__":
     unittest.main()
