@@ -5,13 +5,13 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "xkwmon"
 version = "1.0.0"
-description = "Linux driver for the XKW/HWCX USB display panel (0145:1001) with the original UDP API"
+description = "Linux driver for the 1STPLAYER TS4 240 (XKW/HWCX 0145:1001) USB temperature display: HID panel + original UDP API"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "MIT"
 license-files = []
 authors = [{ name = "xkwmon contributors" }]
-keywords = ["xkw", "hidraw", "temperature", "system-monitor", "usb-display"]
+keywords = ["1stplayer", "ts4", "ts4-240", "xkw", "hwcx", "hidraw", "temperature", "system-monitor", "usb-display", "pump-rpm"]
 classifiers = [
     "Environment :: Console",
     "Intended Audience :: System Administrators",

@@ -37,6 +37,7 @@ DEFAULTS = {
     "LogLevel": "INFO",
     "handshakeAttempts": 2,
     "StatusLogInterval": 60,
+    "RpmMode": "clock",
 }
 
 
@@ -56,6 +57,11 @@ def _as_bool(value: object, fallback: bool) -> bool:
     return fallback
 
 
+def _rpm_mode(value: object) -> str:
+    text = str(value).strip().lower()
+    return text if text in ("clock", "fan") else "clock"
+
+
 @dataclass
 class Config:
     refresh_delay: int = 500       # sensors poll interval, ms
@@ -70,6 +76,7 @@ class Config:
     log_level: str = "INFO"
     handshake_attempts: int = 2
     status_log_interval: int = 60  # seconds, 0 disables the periodic status line
+    rpm_mode: str = "clock"        # "clock" = CPU MHz in the RPM slot, "fan" = fan/pump RPM
     path: str = ""
 
     @property
@@ -131,6 +138,7 @@ def load(path: str | None = None, create: bool = True) -> Config:
         log_level=str(value("LogLevel") or "INFO").strip().upper(),
         handshake_attempts=max(1, _as_int(value("handshakeAttempts"), 2)),
         status_log_interval=max(0, _as_int(value("StatusLogInterval"), 60)),
+        rpm_mode=_rpm_mode(value("RpmMode")),
         path=resolved,
     )
     return config
@@ -157,6 +165,8 @@ hidPath=
 handshakeAttempts=2
 ; how often to print a status line to the journal, seconds (0 = never)
 StatusLogInterval=60
+; what the panel's "RPM" field shows: clock (CPU MHz, default) or fan (pump/fan RPM)
+RpmMode=clock
 """
     with open(path, "w", encoding="utf-8") as handle:
         handle.write(content)
