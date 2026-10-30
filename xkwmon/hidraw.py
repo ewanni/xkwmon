@@ -187,7 +187,8 @@ class HidrawDevice:
                     "variant": name,
                     "expected": expected,
                     "answer": answer,
-                    "verified": verified,
+                    "verified": bool(answer)
+                    and protocol.verify_handshake_response(answer, expected),
                 }
             )
         return results
