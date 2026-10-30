@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xkwmon"
+version = "1.0.0"
+description = "Linux driver for the XKW/HWCX USB display panel (0145:1001) with the original UDP API"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = []
+authors = [{ name = "xkwmon contributors" }]
+keywords = ["xkw", "hidraw", "temperature", "system-monitor", "usb-display"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Monitoring",
+]
+dependencies = []
+
+[project.scripts]
+xkwmon = "xkwmon.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ewanni/xkwmon"
+
+[tool.setuptools]
+packages = ["xkwmon"]
+
+[tool.setuptools.exclude-package-data]
+"*" = ["__pycache__/*", "*.pyc"]

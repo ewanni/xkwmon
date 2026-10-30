@@ -1,0 +1,25 @@
+[Unit]
+Description=XKW USB display temperature monitor (HID panel + UDP API)
+Documentation=file:/opt/xkwmon/README.md
+After=local-fs.target
+Wants=local-fs.target
+
+[Service]
+Type=simple
+# @USER@ / @GROUP@ are substituted by install.sh:
+#   default install runs as root;  install.sh --user  runs as the
+#   unprivileged "xkwmon" user (access to /dev/hidraw is granted by
+#   99-xkw-panel.rules).
+User=@USER@
+Group=@GROUP@
+WorkingDirectory=/opt/xkwmon
+Environment=PYTHONPATH=/opt/xkwmon
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 -m xkwmon -c /etc/xkwmon/config.ini serve
+Restart=always
+RestartSec=3
+# Slightly higher priority helps keeping the 500 ms cadence stable.
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,4 @@
+# XKW / HWCX USB Display (VID 0145, PID 1001)
+# Grants the @GROUP@ group write access so xkwmon can run unprivileged.
+# The logged-in seat user also gets an ACL via uaccess (handy for testing).
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0145", ATTRS{idProduct}=="1001", MODE="0660", GROUP="@GROUP@", TAG+="uaccess"
